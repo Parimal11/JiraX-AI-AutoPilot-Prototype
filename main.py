@@ -9,13 +9,19 @@ import requests
 import google.generativeai as genai
 from dotenv import load_dotenv
 
+origins = [
+    os.getenv("FRONTEND_URL"),
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
 load_dotenv(dotenv_path=".env.local")
 
 app = FastAPI(title="JiraX AI Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # In production, replace with your Vercel URL
+    allow_origins=origins, # In production, replace with your Vercel URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -59,6 +65,16 @@ class AskRequest(BaseModel):
     prompt: str
     context: Optional[str] = ""
 
+class Assignment(BaseModel):
+    member: str
+    issue_titles: List[str]
+
+class SprintPlanResponse(BaseModel):
+    sprint_name: str
+    assignments: List[Assignment]
+    health_score: float
+    summary: str
+
 @app.post("/ai/ask")
 async def ask_ai(req: AskRequest):
     try:
@@ -67,6 +83,22 @@ async def ask_ai(req: AskRequest):
         return {"answer": response.text}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.post("/ai/sprint-plan", response_model=SprintPlanResponse)
+async def create_sprint_plan(data: dict):
+    team = data.get("team", [])
+    issues = data.get("issues", [])
+    
+    prompt = f"Create a sprint plan for this team:\nTeam: {team}\nIssues: {issues}\nBalance the load. Return JSON."
+    
+    # Use the model to generate structured content
+    model = genai.GenerativeModel("gemini-1.5-flash")
+    response = model.generate_content(
+        prompt,
+        generation_config={"response_mime_type": "application/json"}
+    )
+    
+    return response.text # FastAPI will automatically validate this against your Pydantic model
 
 @app.post("/ai/github/analyze")
 async def analyze_repo(req: dict):
