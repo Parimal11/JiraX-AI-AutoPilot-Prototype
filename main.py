@@ -21,7 +21,7 @@ app = FastAPI(title="JiraX AI Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL, "http://localhost:5173"], # In production, replace with your Vercel URL
+    allow_origins=["*"], # In production, replace with your Vercel URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
