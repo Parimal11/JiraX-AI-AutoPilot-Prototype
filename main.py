@@ -1,4 +1,5 @@
 
+import json
 import os
 import sqlite3
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File
@@ -89,16 +90,37 @@ async def create_sprint_plan(data: dict):
     team = data.get("team", [])
     issues = data.get("issues", [])
     
-    prompt = f"Create a sprint plan for this team:\nTeam: {team}\nIssues: {issues}\nBalance the load. Return JSON."
+    # 1. Be very explicit in the prompt about the REQUIRED fields
+    prompt = f"""
+    Create a sprint plan for this team: {team}.
+    Issues: {issues}.
     
-    # Use the model to generate structured content
+    You MUST return a JSON object with exactly these keys:
+    1. "sprint_name": A creative name for the sprint.
+    2. "assignments": A list of objects with "member" and "issue_titles".
+    3. "health_score": A number from 0 to 100.
+    4. "summary": A brief text summary of the plan.
+    """
+    
     model = genai.GenerativeModel("gemini-2.5-flash")
     response = model.generate_content(
         prompt,
         generation_config={"response_mime_type": "application/json"}
     )
     
-    return response.text # FastAPI will automatically validate this against your Pydantic model
+    # 2. Parse the string into a Python dict
+    plan_data = json.loads(response.text)
+    
+    # 3. Validation fallback: Ensure the AI didn't just return a list
+    if isinstance(plan_data, list):
+        plan_data = {
+            "sprint_name": "Dynamic Sprint",
+            "assignments": plan_data, # Put the list into the assignments key
+            "health_score": 85.0,
+            "summary": "Automatically adjusted plan."
+        }
+    
+    return plan_data 
 
 @app.post("/ai/github/analyze")
 async def analyze_repo(req: dict):
