@@ -79,7 +79,7 @@ class SprintPlanResponse(BaseModel):
 @app.post("/ai/ask")
 async def ask_ai(req: AskRequest):
     try:
-        model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+        model = genai.GenerativeModel(model_name="gemini-3-flash-preview")
         response = model.generate_content(f"{req.context}\n\nUser: {req.prompt}")
         return {"answer": response.text}
     except Exception as e:
@@ -102,7 +102,7 @@ async def create_sprint_plan(data: dict):
     4. "summary": A brief text summary of the plan.
     """
     
-    model = genai.GenerativeModel("gemini-2.5-flash")
+    model = genai.GenerativeModel("gemini-3-flash-preview")
     response = model.generate_content(
         prompt,
         generation_config={"response_mime_type": "application/json"}
@@ -154,8 +154,8 @@ async def analyze_vision(file: UploadFile = File(...)):
         # Read the file bytes
         image_bytes = await file.read()
         
-        # Initialize Gemini 1.5 Flash (supports Vision)
-        model = genai.GenerativeModel(model_name="gemini-2.5-flash")
+        
+        model = genai.GenerativeModel(model_name="gemini-3-flash-preview")
         
         prompt = (
             "You are a Senior UI/UX QA Engineer. Analyze this screenshot for: "
