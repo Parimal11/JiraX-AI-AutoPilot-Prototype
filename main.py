@@ -92,7 +92,7 @@ async def create_sprint_plan(data: dict):
     prompt = f"Create a sprint plan for this team:\nTeam: {team}\nIssues: {issues}\nBalance the load. Return JSON."
     
     # Use the model to generate structured content
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-2.5-flash")
     response = model.generate_content(
         prompt,
         generation_config={"response_mime_type": "application/json"}
