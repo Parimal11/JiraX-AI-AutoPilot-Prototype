@@ -9,11 +9,11 @@ import requests
 import google.generativeai as genai
 from dotenv import load_dotenv
 
-origins = [
-    os.getenv("FRONTEND_URL"),
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-]
+
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:5173")
+
+
+
 
 load_dotenv(dotenv_path=".env.local")
 
@@ -21,7 +21,7 @@ app = FastAPI(title="JiraX AI Backend")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins, # In production, replace with your Vercel URL
+    allow_origins=[FRONTEND_URL, "http://localhost:5173"], # In production, replace with your Vercel URL
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
